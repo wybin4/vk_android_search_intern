@@ -1,12 +1,13 @@
 package com.vk.usersapp.feature.feed.ui
 
+import android.content.res.Resources
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.vk.usersapp.R
 import com.vk.usersapp.feature.feed.model.User
 
-class UserListAdapter : Adapter<UserListItemVh>() {
+class UserListAdapter(private val resources: Resources) : Adapter<UserListItemVh>() {
 
     private val dataset: MutableList<User> = mutableListOf()
 
@@ -18,7 +19,7 @@ class UserListAdapter : Adapter<UserListItemVh>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserListItemVh {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.vh_user, parent, false)
-        return UserListItemVh(view)
+        return UserListItemVh(resources, view)
     }
 
     override fun onBindViewHolder(holder: UserListItemVh, position: Int) {

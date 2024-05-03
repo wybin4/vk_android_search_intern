@@ -9,6 +9,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -26,7 +27,7 @@ import kotlinx.coroutines.launch
 
 class UserListFragment : Fragment() {
 
-    val adapter: UserListAdapter by lazy { UserListAdapter() }
+    val adapter: UserListAdapter by lazy { UserListAdapter(requireActivity().resources) }
     var recycler: RecyclerView? = null
     var queryView: EditText? = null
     var errorView: TextView? = null
@@ -55,10 +56,12 @@ class UserListFragment : Fragment() {
                 feature?.viewStateFlow?.collect {
                     renderState(it)
                 }
-                queryView?.asFlow()?.collect {
-                    feature?.submitAction(UserListAction.QueryChanged(it))
-                }
             }
+        }
+
+        queryView?.doOnTextChanged { text, _, _, _ ->
+            val query = text.toString()
+            feature?.submitAction(UserListAction.QueryChanged(query))
         }
 
         feature?.submitAction(UserListAction.Init)
