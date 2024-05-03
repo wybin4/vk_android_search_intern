@@ -1,19 +1,21 @@
 package com.vk.usersapp.feature.feed.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.view.isVisible
-import androidx.core.widget.doAfterTextChanged
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.vk.usersapp.R
@@ -28,6 +30,7 @@ import kotlinx.coroutines.launch
 class UserListFragment : Fragment() {
 
     val adapter: UserListAdapter by lazy { UserListAdapter(requireActivity().resources) }
+
     var recycler: RecyclerView? = null
     var queryView: EditText? = null
     var errorView: TextView? = null
@@ -65,6 +68,16 @@ class UserListFragment : Fragment() {
         }
 
         feature?.submitAction(UserListAction.Init)
+
+        adapter.addLoadStateListener {
+            it.run {
+                if (source.refresh is LoadState.NotLoading && append.endOfPaginationReached && adapter.itemCount < 1) {
+                    errorView?.isVisible = true
+                    recycler?.isVisible = false
+                    errorView?.text = requireContext().getString(R.string.nothing_found)
+                }
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -86,14 +99,10 @@ class UserListFragment : Fragment() {
             }
             is UserListViewState.List -> {
                 loaderView?.isVisible = false
-                if (viewState.itemsList.isEmpty()) {
-                    errorView?.isVisible = true
-                    recycler?.isVisible = false
-                    errorView?.text = requireContext().getString(R.string.nothing_found)
-                } else {
+                lifecycleScope.launch {
                     errorView?.isVisible = false
                     recycler?.isVisible = true
-                    adapter.setUsers(viewState.itemsList)
+                    adapter.submitData(viewState.itemsList)
                 }
             }
             UserListViewState.Loading -> {

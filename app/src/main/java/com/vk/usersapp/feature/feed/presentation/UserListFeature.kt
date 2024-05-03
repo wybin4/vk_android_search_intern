@@ -4,12 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vk.usersapp.core.MVIFeature
 import com.vk.usersapp.feature.feed.api.UsersRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 // MVI:
 //         Action                 patch, state                  newState                            viewState
@@ -62,17 +61,14 @@ class UserListFeature(
     private fun loadUsers(query: String) {
         viewModelScope.launch {
             try {
-                val users = withContext(Dispatchers.IO) {
-                    if (query.isBlank()) {
-                        usersRepository.getUsers()
-                    } else {
-                        usersRepository.searchUsers(query)
-                    }
-                }
-                submitAction(UserListAction.UsersLoaded(users))
+                val pager = usersRepository.getUsers(query)
+                val data = pager.first()
+                submitAction(UserListAction.UsersLoaded(data))
             } catch (e: Exception) {
                 submitAction(UserListAction.LoadError(e.message ?: "FATAL"))
             }
         }
     }
+
+
 }
