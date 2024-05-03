@@ -1,6 +1,5 @@
 package com.vk.usersapp.feature.feed.presentation
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vk.usersapp.core.MVIFeature
@@ -22,14 +21,15 @@ import kotlinx.coroutines.withContext
 //          |            v
 //          |-------- Feature
 
-class UserListFeature : MVIFeature, ViewModel() {
+class UserListFeature(
+    private val usersRepository: UsersRepository = UsersRepository()
+) : MVIFeature, ViewModel() {
     private val mutableViewStateFlow = MutableStateFlow<UserListViewState>(UserListViewState.Loading)
     val viewStateFlow: StateFlow<UserListViewState> = mutableViewStateFlow.asStateFlow()
 
     private var state: UserListState = UserListState()
 
     private val reducer = UserListReducer()
-    private val usersRepository = UsersRepository()
 
     fun submitAction(action: UserListAction) {
         state = reducer.applyAction(action, state)
@@ -71,7 +71,6 @@ class UserListFeature : MVIFeature, ViewModel() {
                 }
                 submitAction(UserListAction.UsersLoaded(users))
             } catch (e: Exception) {
-                Log.e("DIMAA", e.toString())
                 submitAction(UserListAction.LoadError(e.message ?: "FATAL"))
             }
         }
